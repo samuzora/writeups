@@ -1,0 +1,5 @@
+services: 
+  ssrf: 
+    build: . 
+    ports: 
+      - "80:80"

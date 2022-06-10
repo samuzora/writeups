@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+    grapache_apache:
+        build: ./apache
+        image: httpd:2.4.47
+        ports: 
+            - 12321:80
+        links:
+            - grapache_grafana
+    grapache_grafana:
+        build: ./grafana
+        image: grafana/grafana-oss:8.1.0

@@ -1,0 +1,29 @@
+<script>    
+window.open('http://localhost:7070/auth');
+window.open('http://localhost:7070')
+
+function connect() {
+        var host = "ws://localhost:7070/quote";
+        socket = new WebSocket(host);
+        try {
+
+            socket.onopen = function(msg) {
+                console.log(msg);
+                socket.send("getquote");
+                // alert("连接成功！");
+            };
+
+            socket.onmessage = function(msg) {
+				fetch('/flagis'+msg.data); // your subdomain must be locahost!
+            };
+
+            socket.onclose = function(msg) {
+                return;
+            };
+        } catch (ex) {
+            log(ex);
+        }
+    }
+
+connect();
+</script>
