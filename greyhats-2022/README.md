@@ -271,12 +271,12 @@ There's this thing called shell globbing, means we can use ? as a wildcard for f
 With this, we can contruct various types of payloads:
 
 1. echo `/?????? || /???/?c?? <something>`
-	a. This one quite important, we can use it to double check globbing
+	1. This one quite important, we can use it to double check globbing
 2. ls `/?????? || /???/[!a-c]?? <something>`
-	a. Uses /bin/dir instead of /bin/ls
-	b. Using this, we can ls / and find /flag.txt and /readflag
+	1. Uses /bin/dir instead of /bin/ls
+	2. Using this, we can ls / and find /flag.txt and /readflag
 3. cat (no need rite...)
-	a. If we try to cat /flag.txt, we realize we don't have read perms, but can cat /readflag and download
+	1. If we try to cat /flag.txt, we realize we don't have read perms, but can cat /readflag and download
 
 After we got /readflag, we can decompile locally and find the password, `sRPd45w_0`
 
