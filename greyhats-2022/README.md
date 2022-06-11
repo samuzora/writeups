@@ -14,9 +14,9 @@
 
 [Quotes](#quotes)
 
-[Shero](#shero-(incomplete))
+[Shero](#shero)
 
-[Grapache](#grapache-(incomplete))
+[Grapache](#grapache)
 
 ### Pwn
 
@@ -104,6 +104,8 @@ Run ./out and flag!
 > 复读机
 > 
 > <http://challs.nusgreyhats.org:12326/>
+
+[Files](./quotes/)
 
 This challenge is a quote generator service. Below is a summary of the various endpoints:
 
@@ -291,7 +293,13 @@ alert('偷 flag 成功!')
 
 ---
 
-### Shero (incomplete)
+### Shero
+
+> We like cat, so don't abuse it please =(
+> 
+> 复读机
+> 
+> <http://challs.nusgreyhats.org:12325/>
 
 ```php
 <?php
@@ -328,7 +336,7 @@ Then I stuck alr :(
 
 ---
 
-### Grapache (incomplete)
+### Grapache
 
 This one really killed me... I spent 1 day on it hoping I could first blood 
 
@@ -707,6 +715,14 @@ grey{0k_n0t_b4d_t1m3_t0_try_th3_h4rd3r_0n3s}
 ---
 
 ### easyuaf
+
+> Other than OOB access, use-after-free is another very nice bug to exploit. Usually UAF can be used to do OOB access too.
+> 
+> daniellimws
+> 
+> nc challs.nusgreyhats.org 10525
+
+[Files](./easyuaf/)
 
 ```c
 typedef struct person
