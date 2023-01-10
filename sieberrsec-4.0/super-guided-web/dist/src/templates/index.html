@@ -1,0 +1,15 @@
+<h1>Web Guides</h1>
+Checkout our latest guides:
+<ul id="guidesList">
+
+</ul>
+
+<script>
+    fetch("/guides?search=").then(r=>r.json()).then(d=>{
+        // lmao what is XSS
+        console.log(d)
+        for(const res of d){
+            guidesList.innerHTML += `<li><a href="/guides/view/${res.id}">${res.name}</a></li>`
+        }
+    })
+</script>

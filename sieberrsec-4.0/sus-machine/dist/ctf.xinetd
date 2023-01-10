@@ -1,0 +1,13 @@
+service ctf
+{
+    disable     = no
+    cps			= 0 0
+    per_source	= 25
+    port		= 1337
+    protocol	= tcp
+    rlimit_cpu	= 25
+    server		= ./chal
+    type		= UNLISTED
+    user		= ctf
+    wait		= no
+}
